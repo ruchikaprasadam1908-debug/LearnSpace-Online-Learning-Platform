@@ -1,3 +1,4 @@
+
 name: Deploy LearnSpace
 
 on:
@@ -7,21 +8,15 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
-  group: pages
+  group: learnspace-deployment
   cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    environment:
-      name: learnspace-pages-demo
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout repository
@@ -38,18 +33,14 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Build frontend
+      - name: Build React website
         working-directory: frontend
         run: npm run build
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload website
-        uses: actions/upload-pages-artifact@v4
+      - name: Publish website
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: frontend/dist
-
-      - name: Deploy website
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./frontend/dist
+          publish_branch: gh-pages
+          force_orphan: true
